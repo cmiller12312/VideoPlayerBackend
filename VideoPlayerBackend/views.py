@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import *
 from rest_framework import status
-from .models import videoUser
+from models.models import videoUser
 from rest_framework import authtoken
 from rest_framework.authtoken.models import Token
 
@@ -9,6 +9,7 @@ class login(APIView):
     def get(self, request):
         #retrieves user data
         return Response({"type": "test"})
+    
     def post(self, request):
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -26,10 +27,13 @@ class login(APIView):
 
 class signup(APIView):
     def post(self, request):
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-
+        username = request.data["username"]
+        password = request.data["password"]
+        print("testing1")
         if videoUser.objects.filter(username=username).exists():
+            print(videoUser.objects.filter(username=username).exists())
             return Response({"message": "username already exists"}, status=status.HTTP_400_BAD_REQUEST)
+        print("testing2")
         user = videoUser.objects.createUser(username=username, password=password)
+        print("testing3")
         return Response({"message": "user created successfully"}, status=status.HTTP_201_CREATED)

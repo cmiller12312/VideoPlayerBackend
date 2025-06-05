@@ -18,11 +18,12 @@ class videoUserManager(BaseUserManager):
             return False
 
 class videoUser(AbstractBaseUser):
-    username = models.CharField(max_length=50, unique=True)
-    password = models.CharField(max_length=50)
-    profile_picture = models.ImageField(upload_to=f'profilePictures/{username}/', blank=True, null=True)
-    bio = models.TextField(blank=True)
+    username = models.CharField(max_length=50, unique=True, blank=False)
+    password = models.CharField(max_length=50, blank=False)
+    profile_picture = models.ImageField(upload_to=f'profilePictures/{username}/', null=True)
+    bio = models.TextField()
     objects = videoUserManager()  
+    USERNAME_FIELD = 'username'
 
 
 class tag(models.Model):
