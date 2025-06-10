@@ -4,6 +4,7 @@ from rest_framework import status
 from models.models import videoUser
 from rest_framework import authtoken
 from rest_framework.authtoken.models import Token
+from django.contrib.auth.hashers import check_password
 
 class login(APIView):
     def get(self, request):
@@ -11,8 +12,8 @@ class login(APIView):
         return Response({"type": "test"})
     
     def post(self, request):
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+        username = request.data["username"]
+        password = request.data["password"]
         user = None
         
         try:
@@ -20,10 +21,10 @@ class login(APIView):
         except:
             return Response({"message": "username does not exist"}, status=status.HTTP_204_NO_CONTENT)
         
-        if user.password != password:
+        if not check_password(password, user.password):
             return Response({"message": "incorrect password"}, status=status.HTTP_401_UNAUTHORIZED)
-        
-        return Response({"message": "login successful"}, status=status.HTTP_200_OK)
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({"message": f"{token.key}"}, status=status.HTTP_200_OK)
 
 class signup(APIView):
     def post(self, request):
@@ -35,6 +36,5 @@ class signup(APIView):
             return Response({"message": "username already exists"}, status=status.HTTP_400_BAD_REQUEST)
         print("testing2")
         user = videoUser.objects.createUser(username=username, password=password)
-        token = Token.objects.get_or_create(user=user)
-        print(token.key)
-        return Response({"message": "user created successfully"}, status=status.HTTP_201_CREATED)
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({"message": f"{token.key}"}, status=status.HTTP_201_CREATED)

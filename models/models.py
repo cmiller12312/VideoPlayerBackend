@@ -44,7 +44,7 @@ class videoUser(AbstractBaseUser, PermissionsMixin):
 
 
 class tag(models.Model):
-    tagName = models.CharField(max_length=50, unique=True)
+    tagName = models.CharField(max_length=50, unique=True, blank=False)
 
 class video(models.Model):
     title = models.TextField(blank=False)
@@ -56,6 +56,13 @@ class video(models.Model):
     views = models.IntegerField()
 
     tags = models.ManyToManyField(tag, blank=True, related_name='videos')
+
+    author = models.ForeignKey(
+        videoUser,
+        on_delete=models.CASCADE,
+        related_name='videos',
+    )
+
 
 @receiver(post_delete, sender=settings.AUTH_USER_MODEL)
 def delete_auth_token(sender, instance, **kwargs):
