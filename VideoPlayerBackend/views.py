@@ -35,5 +35,6 @@ class signup(APIView):
             return Response({"message": "username already exists"}, status=status.HTTP_400_BAD_REQUEST)
         print("testing2")
         user = videoUser.objects.createUser(username=username, password=password)
-        print("testing3")
+        token = Token.objects.get_or_create(user=user)
+        print(token.key)
         return Response({"message": "user created successfully"}, status=status.HTTP_201_CREATED)
