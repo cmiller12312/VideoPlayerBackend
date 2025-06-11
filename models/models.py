@@ -63,6 +63,10 @@ class video(models.Model):
         related_name='videos',
     )
 
+    cover = models.ImageField(null=True)
+
+    videoLength = models.FloatField(null=False, blank=False)
+
 
 @receiver(post_delete, sender=settings.AUTH_USER_MODEL)
 def delete_auth_token(sender, instance, **kwargs):
