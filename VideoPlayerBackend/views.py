@@ -33,7 +33,9 @@ class login(APIView):
         if not check_password(password, user.password):
             return Response({"message": "incorrect password"}, status=status.HTTP_401_UNAUTHORIZED)
         token, created = Token.objects.get_or_create(user=user)
-        return Response({"token": f"{token.key}"}, status=status.HTTP_200_OK)
+        return Response({
+            "token": f"{token.key}"
+        }, status=status.HTTP_200_OK)
 
 class signup(APIView):
     authentication_classes = []
@@ -48,7 +50,9 @@ class signup(APIView):
         print("testing2")
         user = videoUser.objects.createUser(username=username, password=password)
         token, created = Token.objects.get_or_create(user=user)
-        return Response({"token": f"{token.key}"}, status=status.HTTP_201_CREATED)
+        return Response({
+            "token": f"{token.key}"
+        }, status=status.HTTP_201_CREATED)
 
 class uploadVideo(APIView):
     authentication_classes = [TokenAuthentication]
@@ -106,8 +110,25 @@ class uploadVideo(APIView):
         for tagName in tags:
             temp, created = tag.objects.get_or_create(tagName=tagName)
             temp.videos.add(createdVideo)
-        return Response({"message": "posted"}, status=status.HTTP_200_OK)
 
+        request.user.videos.add(createdVideo)
+        return Response({
+            "message": "posted"
+        }, status=status.HTTP_200_OK)
+
+class userSettings(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        videos = []
+        for v in request.user.videos.all():
+            videos.append(v.title)
+        return Response({
+            "username": request.user.username,
+            "followerCount": request.user.followCount,
+            "videos": videos
+        }, status=status.HTTP_200_OK)
+        
 
 
 def getIP(request):
