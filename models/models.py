@@ -53,7 +53,7 @@ class video(models.Model):
     #video will refer to a directory on the server
     video = models.TextField(blank=False, unique=True)
 
-    views = models.IntegerField()
+    views = models.IntegerField(default=0)
 
     tags = models.ManyToManyField(tag, blank=True, related_name='videos')
 

@@ -1,13 +1,17 @@
 from rest_framework.views import APIView
 from rest_framework.response import *
 from rest_framework import status
-from models.models import videoUser
+from models.models import videoUser, video, tag
 from rest_framework import authtoken
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
 from django.contrib.auth.hashers import check_password
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import AllowAny
+import os
+import cv2
+import datetime
+import json
 
 class login(APIView):
     authentication_classes = []
@@ -52,6 +56,65 @@ class uploadVideo(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        user = request.user
+        print(user)
+        print("Uploaded files:", request.FILES)
+        videosPath = os.path.abspath(os.path.join(".", "videos"))
+        try:
+            os.mkdir(os.path.join(videosPath, user.username))
+        except:
+            pass
+        videosPath = os.path.join(videosPath, user.username)
 
-        title = request
-        return Response({"message":"posted"}, status=status.HTTP_200_OK)
+        file = request.FILES["video"]
+        try:
+            title = request.data["title"]
+        except:
+            return Response({"message": "missing title"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            description = request.data["description"]
+        except:
+            description = None
+        temp = 0
+        while True:
+            if temp == 0:
+                videoPath = os.path.join(videosPath, file.name)
+            else:
+                name, extension = str.split(file.name, ".")
+                name = name + f"{temp}"
+                newName = name + ".mp4"
+                videoPath = os.path.join(videosPath, newName)
+            if os.path.exists(videoPath):
+                temp += 1
+            else:
+                break
+
+
+        with open(videoPath, 'wb+') as destination:
+            for chunk in file.chunks():
+                destination.write(chunk)
+
+        data = cv2.VideoCapture(videoPath)
+        frames = data.get(cv2.CAP_PROP_FRAME_COUNT)
+        fps = data.get(cv2.CAP_PROP_FPS)
+        seconds = round(frames / fps)
+        print(f"duration in seconds: {seconds}")
+
+
+        createdVideo = video.objects.create(author=user, title=title, description=description, video=videoPath, videoLength=seconds)
+        tags = json.loads(request.data["tags"])
+
+        for tagName in tags:
+            temp, created = tag.objects.get_or_create(tagName=tagName)
+            createdVideo.tags.add(temp)
+        return Response({"message": "posted"}, status=status.HTTP_200_OK)
+
+
+
+def getIP(request):
+    forwardedFor = request.META.get('HTTP_X_FORWARDED_FOR')
+    if forwardedFor:
+        ip = forwardedFor.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
