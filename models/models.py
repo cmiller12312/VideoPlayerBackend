@@ -6,6 +6,7 @@ from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
 
 
+
 class videoUserManager(BaseUserManager):
     def createUser(self, username, password, **extra_fields):
         user = self.model(username=username, **extra_fields)
@@ -43,8 +44,6 @@ class videoUser(AbstractBaseUser, PermissionsMixin):
         return self.username
 
 
-class tag(models.Model):
-    tagName = models.CharField(max_length=50, unique=True, blank=False)
 
 class video(models.Model):
     title = models.TextField(blank=False)
@@ -54,8 +53,6 @@ class video(models.Model):
     video = models.TextField(blank=False, unique=True)
 
     views = models.IntegerField(default=0)
-
-    tags = models.ManyToManyField(tag, blank=True, related_name='videos')
 
     author = models.ForeignKey(
         videoUser,
@@ -68,6 +65,11 @@ class video(models.Model):
     videoLength = models.FloatField(null=False, blank=False)
 
 
+class tag(models.Model):
+    tagName = models.CharField(max_length=50, unique=True, blank=False)
+
+    videos = models.ManyToManyField(video, blank=True)
+    
 @receiver(post_delete, sender=settings.AUTH_USER_MODEL)
 def delete_auth_token(sender, instance, **kwargs):
     try:

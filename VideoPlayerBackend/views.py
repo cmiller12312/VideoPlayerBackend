@@ -10,7 +10,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import AllowAny
 import os
 import cv2
-import datetime
 import json
 
 class login(APIView):
@@ -106,7 +105,7 @@ class uploadVideo(APIView):
 
         for tagName in tags:
             temp, created = tag.objects.get_or_create(tagName=tagName)
-            createdVideo.tags.add(temp)
+            temp.videos.add(createdVideo)
         return Response({"message": "posted"}, status=status.HTTP_200_OK)
 
 
