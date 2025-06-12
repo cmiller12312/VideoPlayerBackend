@@ -28,7 +28,7 @@ class login(APIView):
         try:
             user = videoUser.objects.get(username=username)
         except:
-            return Response({"message": "username does not exist"}, status=status.HTTP_204_NO_CONTENT)
+            return Response({"message": "username does not exist"}, status=status.HTTP_404_NOT_FOUND)
         
         if not check_password(password, user.password):
             return Response({"message": "incorrect password"}, status=status.HTTP_401_UNAUTHORIZED)
