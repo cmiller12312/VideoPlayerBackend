@@ -4,7 +4,7 @@ from django.conf import settings
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
-
+import datetime as time
 
 
 class videoUserManager(BaseUserManager):
@@ -32,7 +32,8 @@ class videoUserManager(BaseUserManager):
 class videoUser(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=50, unique=True, blank=False)
     password = models.CharField(max_length=128, blank=False)
-    profile_picture = models.ImageField(upload_to='profilePictures/%Y/%m/%d/', null=True)
+    creationDate = models.DateTimeField(default=time.datetime.now())
+    pfp = models.TextField(null=True, blank=True)
     bio = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -64,6 +65,8 @@ class video(models.Model):
     )
 
     cover = models.ImageField(null=True)
+
+    date = models.DateTimeField(default=time.datetime.now())
 
     videoLength = models.FloatField(null=False, blank=False)
 

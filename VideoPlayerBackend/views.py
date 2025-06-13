@@ -11,6 +11,7 @@ from rest_framework.permissions import AllowAny
 import os
 import cv2
 import json
+import base64
 
 class login(APIView):
     authentication_classes = []
@@ -31,7 +32,7 @@ class login(APIView):
             return Response({"message": "username does not exist"}, status=status.HTTP_404_NOT_FOUND)
         
         if not check_password(password, user.password):
-            return Response({"message": "incorrect password"}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"message": "Username or password incorrect"}, status=status.HTTP_401_UNAUTHORIZED)
         token, created = Token.objects.get_or_create(user=user)
         return Response({
             "token": f"{token.key}"
@@ -49,6 +50,7 @@ class signup(APIView):
             return Response({"message": "username already exists"}, status=status.HTTP_400_BAD_REQUEST)
         print("testing2")
         user = videoUser.objects.createUser(username=username, password=password)
+        user.pfp = None
         token, created = Token.objects.get_or_create(user=user)
         return Response({
             "token": f"{token.key}"
@@ -119,15 +121,40 @@ class uploadVideo(APIView):
 class userSettings(APIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
+
     def get(self, request):
-        videos = []
-        for v in request.user.videos.all():
-            videos.append(v.title)
+        videos = [v.title for v in request.user.videos.all()]
+        pfp_data = None
+        pfp_path = request.user.pfp
+        if pfp_path and os.path.exists(pfp_path):
+            with open(pfp_path, 'rb') as file:
+                pfp_data = base64.b64encode(file.read()).decode('utf-8')
         return Response({
             "username": request.user.username,
             "followerCount": request.user.followCount,
-            "videos": videos
+            "videos": videos,
+            "pfp": pfp_data, 
         }, status=status.HTTP_200_OK)
+    
+    def post(self, request):
+        try:
+            file = request.FILES["image"]
+            user = request.user
+            userFolder = os.path.join(os.path.abspath(os.path.join(".", "profilePictures")), user.username)
+            os.makedirs(userFolder, exist_ok=True)  # This will create the folder if it doesn't exist
+
+            filePath = os.path.join(userFolder, file.name)
+            with open(filePath, 'wb+') as destination:
+                for chunk in file.chunks():
+                    destination.write(chunk)
+            print("Profile picture saved to:", filePath)
+            user.pfp = filePath
+            user.save()
+        except Exception as e:
+            print("Error saving profile picture:", e)
+            return Response({"message": "error uploading image"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"message": "ok"}, status=status.HTTP_202_ACCEPTED)
+            
         
 
 
