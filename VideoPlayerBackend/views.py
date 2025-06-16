@@ -201,7 +201,10 @@ class getVideo(APIView):
     def post(self, request):
         username = request.data.get("username")
         title = request.data.get("title")
-        print("title: ", title, "  username: ", username)
+
+        #filters currently does not do anything but will take tags and use them to filter
+        filters = request.data.get("filters")
+        print(filters)
 
         if not username or not title:
             return Response({"message": "username and title required"}, status=status.HTTP_400_BAD_REQUEST)
