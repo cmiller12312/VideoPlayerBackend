@@ -23,5 +23,7 @@ urlpatterns = [
     path('login/', login.as_view()),
     path('signup/', signup.as_view()),
     path('uploadVideo/', uploadVideo.as_view()),
-    path('userSettings/', userSettings.as_view())
+    path('userSettings/', userSettings.as_view()),
+    path('followSettings/', followSettings.as_view()),
+    path('getVideoBatch/', getVideoBatch.as_view()),
 ]

@@ -141,7 +141,7 @@ class userSettings(APIView):
             file = request.FILES["image"]
             user = request.user
             userFolder = os.path.join(os.path.abspath(os.path.join(".", "profilePictures")), user.username)
-            os.makedirs(userFolder, exist_ok=True)  # This will create the folder if it doesn't exist
+            os.makedirs(userFolder, exist_ok=True)
 
             filePath = os.path.join(userFolder, file.name)
             with open(filePath, 'wb+') as destination:
@@ -154,7 +154,45 @@ class userSettings(APIView):
             print("Error saving profile picture:", e)
             return Response({"message": "error uploading image"}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"message": "ok"}, status=status.HTTP_202_ACCEPTED)
-            
+    
+
+class getVideoBatch(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        result = []
+
+        for followed_user in user.following.all():
+            videos = followed_user.videos.all()
+            for v in videos:
+                result.append({
+                    "username": followed_user.username,
+                    "title": v.title
+                })
+
+        return Response({"Titles": result}, status=status.HTTP_200_OK)
+
+class followSettings(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        username = request.data["username"]
+        try:
+            for i in user.following.all():
+                if i.username == username:
+                    return Response({"message":"already follwing user"}, status=status.HTTP_400_BAD_REQUEST)
+            userToFollow = videoUser.objects.get(username=username)
+            request.user.following.add(userToFollow)
+            userToFollow.followCount += 1
+            userToFollow.save()
+            user.save()
+            return Response({"message": f"followed {username}"}, status=status.HTTP_202_ACCEPTED)
+        except videoUser.DoesNotExist:
+            return Response({"message": "user not found"}, status=status.HTTP_404_NOT_FOUND)
         
 
 
