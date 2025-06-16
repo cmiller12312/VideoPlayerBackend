@@ -74,6 +74,8 @@ class uploadVideo(APIView):
         file = request.FILES["video"]
         try:
             title = request.data["title"]
+            if len(title) > 18:
+                return Response({"message": "Title must be 18 characters or shorter"}, status=status.HTTP_400_BAD_REQUEST)
         except:
             return Response({"message": "missing title"}, status=status.HTTP_400_BAD_REQUEST)
         try:
@@ -212,10 +214,10 @@ class getVideo(APIView):
         try:
             user = videoUser.objects.get(username=username)
             vid = video.objects.get(author=user, title=title)
-            if vid.cover and os.path.exists(vid.cover):
+            try:
                 with open(vid.cover, 'rb') as file:
                     thumbnail = base64.b64encode(file.read()).decode('utf-8')
-            else:
+            except:
                 filler_path = os.path.join(os.path.dirname(__file__), "resources", "FillerCover.jpg")
                 with open(filler_path, 'rb') as file:
                     thumbnail = base64.b64encode(file.read()).decode('utf-8')
