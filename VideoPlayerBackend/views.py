@@ -194,6 +194,48 @@ class followSettings(APIView):
         except videoUser.DoesNotExist:
             return Response({"message": "user not found"}, status=status.HTTP_404_NOT_FOUND)
         
+class getVideo(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        username = request.data.get("username")
+        title = request.data.get("title")
+        print("title: ", title, "  username: ", username)
+
+        if not username or not title:
+            return Response({"message": "username and title required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = videoUser.objects.get(username=username)
+            vid = video.objects.get(author=user, title=title)
+            if vid.cover and os.path.exists(vid.cover):
+                with open(vid.cover, 'rb') as file:
+                    thumbnail = base64.b64encode(file.read()).decode('utf-8')
+            else:
+                filler_path = os.path.join(os.path.dirname(__file__), "resources", "FillerCover.jpg")
+                with open(filler_path, 'rb') as file:
+                    thumbnail = base64.b64encode(file.read()).decode('utf-8')
+
+            if user.pfp and os.path.exists(user.pfp):
+                with open(user.pfp, 'rb') as file:
+                    pfp = base64.b64encode(file.read()).decode('utf-8')
+            else:
+                pfp = None
+
+        except videoUser.DoesNotExist:
+            return Response({"message": "user not found"}, status=status.HTTP_404_NOT_FOUND)
+        except video.DoesNotExist:
+            return Response({"message": "video not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        return Response({
+            "username": user.username,
+            "title": vid.title,
+            "thumbnail": thumbnail,
+            "videoLength": vid.videoLength,
+            "userPfp": pfp
+        }, status=status.HTTP_200_OK)
+
 
 
 def getIP(request):
