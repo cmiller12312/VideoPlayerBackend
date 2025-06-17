@@ -162,9 +162,14 @@ class getVideoBatch(APIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
+    def post(self, request):
         user = request.user
         result = []
+        try:
+            filters = request.data.get("filters")
+            print(filters)
+        except:
+            print("no filters")
 
         for followed_user in user.following.all():
             videos = followed_user.videos.all()
@@ -205,8 +210,6 @@ class getVideo(APIView):
         title = request.data.get("title")
 
         #filters currently does not do anything but will take tags and use them to filter
-        filters = request.data.get("filters")
-        print(filters)
 
         if not username or not title:
             return Response({"message": "username and title required"}, status=status.HTTP_400_BAD_REQUEST)
