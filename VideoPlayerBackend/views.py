@@ -140,18 +140,26 @@ class userSettings(APIView):
     
     def post(self, request):
         try:
-            file = request.FILES["image"]
-            user = request.user
-            userFolder = os.path.join(os.path.abspath(os.path.join(".", "profilePictures")), user.username)
-            os.makedirs(userFolder, exist_ok=True)
+            file = request.data.get("pfp")
+            if file != None:
+                oldPath = request.user.pfp
+                if oldPath and os.path.exists(oldPath):
+                    try:
+                        os.remove(oldPath)
+                        print("Old profile picture deleted:", oldPath)
+                    except Exception as delete_err:
+                        print("Failed to delete old profile picture:", delete_err)
+                userFolder = os.path.join(os.path.abspath(os.path.join(".", "profilePictures")), request.user.username)
+                os.makedirs(userFolder, exist_ok=True)
+                base64_string = file
+                
 
-            filePath = os.path.join(userFolder, file.name)
-            with open(filePath, 'wb+') as destination:
-                for chunk in file.chunks():
-                    destination.write(chunk)
-            print("Profile picture saved to:", filePath)
-            user.pfp = filePath
-            user.save()
+                imageData = base64.b64decode(base64_string)
+                with open(f"{userFolder}/{request.user.username}.png", "wb") as f:
+                    f.write(imageData)
+                print("Profile picture saved to:", f"{userFolder}/{request.user.username}.png")
+                request.user.pfp = f"{userFolder}/{request.user.username}.png"
+            request.user.save()
         except Exception as e:
             print("Error saving profile picture:", e)
             return Response({"message": "error uploading image"}, status=status.HTTP_400_BAD_REQUEST)
@@ -167,9 +175,8 @@ class getVideoBatch(APIView):
         result = []
         try:
             filters = request.data.get("filters")
-            print(filters)
         except:
-            print("no filters")
+            pass
 
         for followed_user in user.following.all():
             videos = followed_user.videos.all()
