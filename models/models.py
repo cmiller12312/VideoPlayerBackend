@@ -51,7 +51,7 @@ class videoUser(AbstractBaseUser, PermissionsMixin):
 
 class video(models.Model):
     title = models.TextField(blank=False)
-    description = models.TextField(blank=True)
+    description = models.TextField(null=True)
 
     #video will refer to a directory on the server
     video = models.TextField(blank=False, unique=True)

@@ -74,6 +74,9 @@ class uploadVideo(APIView):
         file = request.FILES["video"]
         try:
             title = request.data["title"]
+            if video.objects.filter(author=request.user, title=title).exists():
+                return Response({"message": "Already have a video titled that"}, status=status.HTTP_400_BAD_REQUEST)
+            
             if len(title) > 18:
                 return Response({"message": "Title must be 18 characters or shorter"}, status=status.HTTP_400_BAD_REQUEST)
         except:
