@@ -64,7 +64,7 @@ class video(models.Model):
         on_delete=models.CASCADE,
     )
 
-    cover = models.ImageField(null=True)
+    cover = models.TextField(null=True, unique=True)
 
     date = models.DateTimeField(default=time.datetime.now())
 

@@ -110,8 +110,27 @@ class uploadVideo(APIView):
         seconds = round(frames / fps)
         print(f"duration in seconds: {seconds}")
 
+        cover_b64 = request.data.get("cover")
+        coverPath = None
+        if cover_b64:
+            cover_folder = os.path.abspath(os.path.join(".", "covers", user.username))
+            os.makedirs(cover_folder, exist_ok=True)
+            coverPath = os.path.join(cover_folder, f"{title}Cover.png")
+            try:
+                with open(coverPath, "wb") as f:
+                    f.write(base64.b64decode(cover_b64))
+            except Exception as e:
+                print("Error saving cover image:", e)
+                coverPath = None
 
-        createdVideo = video.objects.create(author=user, title=title, description=description, video=videoPath, videoLength=seconds)
+        createdVideo = video.objects.create(
+            author=user,
+            title=title,
+            description=description,
+            video=videoPath,
+            videoLength=seconds,
+            cover=coverPath
+        )
         tags = json.loads(request.data["tags"])
 
         for tagName in tags:
@@ -254,12 +273,3 @@ class getVideo(APIView):
             "userPfp": pfp
         }, status=status.HTTP_200_OK)
 
-
-
-def getIP(request):
-    forwardedFor = request.META.get('HTTP_X_FORWARDED_FOR')
-    if forwardedFor:
-        ip = forwardedFor.split(',')[0]
-    else:
-        ip = request.META.get('REMOTE_ADDR')
-    return ip
