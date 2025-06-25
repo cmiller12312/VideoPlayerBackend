@@ -100,6 +100,7 @@ class uploadVideo(APIView):
                 break
 
 
+        os.makedirs(os.path.dirname(videoPath), exist_ok=True)
         with open(videoPath, 'wb+') as destination:
             for chunk in file.chunks():
                 destination.write(chunk)
@@ -273,3 +274,26 @@ class getVideo(APIView):
             "userPfp": pfp
         }, status=status.HTTP_200_OK)
 
+class search(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+    def post(self, request):
+        search = request.data.get("data")
+        result = []
+        print(search)
+        username = None
+
+        try:
+            user = videoUser.objects.get(username=search)
+            username = user.username
+        except videoUser.DoesNotExist:
+            pass
+
+        try:
+            videos = video.objects.filter(title=search)
+            for i in videos:
+                result.append(i.author.username)  # or another serializable field
+        except Exception as e:
+            pass
+        
+        return Response({"username": username, "results": result}, status=status.HTTP_200_OK)

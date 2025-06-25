@@ -26,5 +26,6 @@ urlpatterns = [
     path('userSettings/', userSettings.as_view()),
     path('followSettings/', followSettings.as_view()),
     path('getVideoBatch/', getVideoBatch.as_view()),
-    path('getVideo/', getVideo.as_view())
+    path('getVideo/', getVideo.as_view()),
+    path('search/',search.as_view()),
 ]
