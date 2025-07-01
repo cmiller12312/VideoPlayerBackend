@@ -253,11 +253,15 @@ class getVideo(APIView):
         except video.DoesNotExist:
             return Response({"message": "video not found"}, status=status.HTTP_404_NOT_FOUND)
 
+        vid.views += 1
+        vid.save()
         return Response({
             "username": user.username,
             "title": vid.title,
             "thumbnail": thumbnail,
             "videoLength": vid.videoLength,
-            "userPfp": pfp
+            "userPfp": pfp,
+            "description": vid.description,
+            "views": vid.views,
+            "date": vid.date,
         }, status=status.HTTP_200_OK)
-
