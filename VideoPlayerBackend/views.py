@@ -12,6 +12,7 @@ import os
 import cv2
 import json
 import base64
+from django.views.decorators.csrf import csrf_exempt
 
 class login(APIView):
     authentication_classes = []
@@ -208,29 +209,40 @@ class followSettings(APIView):
     def post(self, request):
         user = request.user
         username = request.data["username"]
+
+        print(username)
+
         try:
-            for i in user.following.all():
-                if i.username == username:
-                    return Response({"message":"already follwing user"}, status=status.HTTP_400_BAD_REQUEST)
             userToFollow = videoUser.objects.get(username=username)
-            request.user.following.add(userToFollow)
-            userToFollow.followCount += 1
-            userToFollow.save()
-            user.save()
-            return Response({"message": f"followed {username}"}, status=status.HTTP_202_ACCEPTED)
+
+            if userToFollow in user.following.all():
+                user.following.remove(userToFollow)
+                userToFollow.followCount = max(userToFollow.followCount - 1, 0)
+                userToFollow.save()
+                user.save()
+                return Response({"message": f"unfollowed {username}"}, status=status.HTTP_200_OK)
+            else:
+                user.following.add(userToFollow)
+                userToFollow.followCount += 1
+                userToFollow.save()
+                user.save()
+                return Response({"message": f"followed {username}"}, status=status.HTTP_202_ACCEPTED)
+
         except videoUser.DoesNotExist:
             return Response({"message": "user not found"}, status=status.HTTP_404_NOT_FOUND)
+
         
 class getVideo(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
 
+    @csrf_exempt
     def post(self, request):
         username = request.data.get("username")
         title = request.data.get("title")
         if not username or not title:
             return Response({"message": "username and title required"}, status=status.HTTP_400_BAD_REQUEST)
-
+            
         try:
             user = videoUser.objects.get(username=username)
             vid = video.objects.get(author=user, title=title)
@@ -265,3 +277,18 @@ class getVideo(APIView):
             "views": vid.views,
             "date": vid.date,
         }, status=status.HTTP_200_OK)
+    
+class followStatus(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        username = request.data["username"]
+        try:
+            for i in user.following.all():
+                if i.username == username:
+                    return Response({"status":True}, status=status.HTTP_200_OK)
+            return Response({"status":False}, status=status.HTTP_200_OK)
+        except videoUser.DoesNotExist:
+            return Response({"message": "user not found"}, status=status.HTTP_404_NOT_FOUND)
