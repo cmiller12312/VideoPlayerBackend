@@ -87,18 +87,7 @@ class uploadVideo(APIView):
         except:
             description = None
         temp = 0
-        while True:
-            if temp == 0:
-                videoPath = os.path.join(videosPath, file.name)
-            else:
-                name, extension = str.split(file.name, ".")
-                name = name + f"{temp}"
-                newName = name + ".mp4"
-                videoPath = os.path.join(videosPath, newName)
-            if os.path.exists(videoPath):
-                temp += 1
-            else:
-                break
+        videoPath = os.path.join(videosPath, (title + ".mp4"))
 
 
         with open(videoPath, 'wb+') as destination:
@@ -161,7 +150,7 @@ class userSettings(APIView):
             file = request.data.get("pfp")
             if file != None:
                 oldPath = request.user.pfp
-                if oldPath and os.path.exists(oldPath):
+                if oldPath and os.path.exists(oldPath) and oldPath != os.path.join(os.path.dirname(__file__), "resources", "defaultUser.jpg"):
                     try:
                         os.remove(oldPath)
                         print("Old profile picture deleted:", oldPath)
@@ -192,15 +181,25 @@ class getVideoBatch(APIView):
         user = request.user
         result = []
 
-        for followed_user in user.following.all():
-            videos = followed_user.videos.all()
+        for followed in user.following.all():
+            videos = followed.videos.all()
             for v in videos:
                 result.append({
-                    "username": followed_user.username,
+                    "username": followed.username,
                     "title": v.title
                 })
 
-        return Response({"Titles": result}, status=status.HTTP_200_OK)
+        unfollowedVideos = video.objects.exclude(author__in=user.following.all()).order_by('-views')[:20]
+        for v in unfollowedVideos:
+            result.append({
+                "username": v.author.username,
+                "title": v.title,
+            })
+
+        return Response({
+            "Titles": result,
+            "Unfollowed": result
+        }, status=status.HTTP_200_OK)
 
 class followSettings(APIView):
     authentication_classes = [TokenAuthentication]

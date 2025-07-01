@@ -127,7 +127,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+MEDIA_ROOT = BASE_DIR / "videos"
+MEDIA_URL = "/videos/"
+STATIC_URL = '/static/'
 
 # settings.py
 AUTH_USER_MODEL = 'models.videoUser'
