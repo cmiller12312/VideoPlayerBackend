@@ -70,12 +70,6 @@ class video(models.Model):
 
     videoLength = models.FloatField(null=False, blank=False)
 
-
-class tag(models.Model):
-    tagName = models.CharField(max_length=50, unique=True, blank=False)
-
-    videos = models.ManyToManyField(video, blank=True)
-
 @receiver(post_delete, sender=settings.AUTH_USER_MODEL)
 def delete_auth_token(sender, instance, **kwargs):
     try:

@@ -5,4 +5,3 @@ from models.models import *
 
 admin.site.register(videoUser)
 admin.site.register(video)
-admin.site.register(tag)

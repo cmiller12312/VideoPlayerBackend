@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import *
 from rest_framework import status
-from models.models import videoUser, video, tag
+from models.models import videoUser, video
 from rest_framework import authtoken
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
@@ -18,7 +18,6 @@ class login(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        #retrieves user data
         return Response({"type": "test"})
     
     def post(self, request):
@@ -50,7 +49,11 @@ class signup(APIView):
             return Response({"message": "username already exists"}, status=status.HTTP_400_BAD_REQUEST)
         print("testing2")
         user = videoUser.objects.createUser(username=username, password=password)
-        user.pfp = None
+
+        filler = os.path.join(os.path.dirname(__file__), "resources", "defaultUser.jpg")
+        user.pfp = filler
+        user.save()
+
         token, created = Token.objects.get_or_create(user=user)
         return Response({
             "token": f"{token.key}"
@@ -62,8 +65,6 @@ class uploadVideo(APIView):
 
     def post(self, request):
         user = request.user
-        print(user)
-        print("Uploaded files:", request.FILES)
         videosPath = os.path.abspath(os.path.join(".", "videos"))
         try:
             os.mkdir(os.path.join(videosPath, user.username))
@@ -131,11 +132,6 @@ class uploadVideo(APIView):
             videoLength=seconds,
             cover=coverPath
         )
-        tags = json.loads(request.data["tags"])
-
-        for tagName in tags:
-            temp, created = tag.objects.get_or_create(tagName=tagName)
-            temp.videos.add(createdVideo)
 
         request.user.videos.add(createdVideo)
         return Response({
@@ -195,10 +191,6 @@ class getVideoBatch(APIView):
     def post(self, request):
         user = request.user
         result = []
-        try:
-            filters = request.data.get("filters")
-        except:
-            pass
 
         for followed_user in user.following.all():
             videos = followed_user.videos.all()
@@ -237,9 +229,6 @@ class getVideo(APIView):
     def post(self, request):
         username = request.data.get("username")
         title = request.data.get("title")
-
-        #filters currently does not do anything but will take tags and use them to filter
-
         if not username or not title:
             return Response({"message": "username and title required"}, status=status.HTTP_400_BAD_REQUEST)
 
