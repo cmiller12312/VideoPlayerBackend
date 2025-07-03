@@ -139,16 +139,21 @@ class userSettings(APIView):
         if pfp_path and os.path.exists(pfp_path):
             with open(pfp_path, 'rb') as file:
                 pfp_data = base64.b64encode(file.read()).decode('utf-8')
+
         return Response({
             "username": request.user.username,
             "followerCount": request.user.followCount,
             "videos": videos,
             "pfp": pfp_data, 
+            "bio": request.user.bio,
+            "followerCount": request.user.followCount,
         }, status=status.HTTP_200_OK)
     
     def post(self, request):
         try:
             file = request.data.get("pfp")
+            bio = request.data.get("bio")
+            print("BIO: " + bio)
             if file != None:
                 oldPath = request.user.pfp
                 if oldPath and os.path.exists(oldPath) and oldPath != os.path.join(os.path.dirname(__file__), "resources", "defaultUser.jpg"):
@@ -167,6 +172,9 @@ class userSettings(APIView):
                     f.write(imageData)
                 print("Profile picture saved to:", f"{userFolder}/{request.user.username}.png")
                 request.user.pfp = f"{userFolder}/{request.user.username}.png"
+
+            if bio != None:
+                request.user.bio = bio
             request.user.save()
         except Exception as e:
             print("Error saving profile picture:", e)
@@ -292,3 +300,28 @@ class followStatus(APIView):
             return Response({"status":False}, status=status.HTTP_200_OK)
         except videoUser.DoesNotExist:
             return Response({"message": "user not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+class userDetails(APIView):
+    authentication_classes = []
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        username = request.data["username"]
+        user = videoUser.objects.get(username=username)
+        videos = [v.title for v in user.videos.all()]
+        pfp_data = None
+        pfp_path = user.pfp
+        if pfp_path and os.path.exists(pfp_path):
+            with open(pfp_path, 'rb') as file:
+                pfp_data = base64.b64encode(file.read()).decode('utf-8')
+
+
+        return Response({
+            "username": username,
+            "followerCount": user.followCount,
+            "videos": videos,
+            "pfp": pfp_data, 
+            "bio": user.bio,
+            "followerCount": user.followCount,
+        }, status=status.HTTP_200_OK)
+    
