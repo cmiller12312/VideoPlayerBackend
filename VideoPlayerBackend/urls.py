@@ -30,6 +30,7 @@ urlpatterns = [
     path('getVideoBatch/', getVideoBatch.as_view()),
     path('getVideo/', getVideo.as_view()),
     path('followStatus/', followStatus.as_view()),
-    path('userDetails/', userDetails.as_view())
+    path('userDetails/', userDetails.as_view()),
+    path('search/', search.as_view()),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

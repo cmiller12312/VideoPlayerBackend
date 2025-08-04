@@ -325,3 +325,15 @@ class userDetails(APIView):
             "followerCount": user.followCount,
         }, status=status.HTTP_200_OK)
     
+class search(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        videos = video.objects.filter(title=request.data["data"])
+        searchResults = []
+        print(request)
+        for i in videos:
+            searchResults.append(i.author.username)
+        return Response({"title":request.data["data"] , "authors": searchResults}, status=status.HTTP_200_OK)
+    
